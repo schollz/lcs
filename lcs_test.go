@@ -54,6 +54,15 @@ func TestAlign(t *testing.T) {
 	}
 	fmt.Println(aPos)
 	fmt.Println(bPos)
+	mergedPositions := make([]int, len(l))
+	for i := range aPos {
+		if aPos[i] > bPos[i] {
+			mergedPositions[i] = aPos[i]
+		} else {
+			mergedPositions[i] = bPos[i]
+		}
+	}
+	fmt.Println(mergedPositions)
 }
 func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
