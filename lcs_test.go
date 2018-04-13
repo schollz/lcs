@@ -63,6 +63,20 @@ func TestAlign(t *testing.T) {
 		}
 	}
 	fmt.Println(mergedPositions)
+	aAligned := ""
+	j = 0
+	for i := 0; i < len(a); i++ {
+		if string(a[i]) == string(l[j]) {
+			fmt.Println(i, j, mergedPositions[j], string(a[i]))
+			for k := i; k < mergedPositions[j]; k++ {
+				aAligned += "-"
+			}
+			i = mergedPositions[j]
+			j++
+		}
+		aAligned += string(a[i])
+	}
+	fmt.Println(aAligned)
 }
 func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
