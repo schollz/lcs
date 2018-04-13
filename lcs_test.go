@@ -1,6 +1,7 @@
 package lcs
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -58,6 +59,12 @@ func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
 	b := "the dog sat and flap"
 	assert.Equal(t, "the  sat n lap", lcs(a, b))
+}
+
+func TestLcsByte(t *testing.T) {
+	a := []byte("the cat sat on a lap")
+	b := []byte("the dog sat and flap")
+	assert.Equal(t, []byte("the  sat n lap"), lcsByte(a, b))
 }
 
 func lcs2(a, b string) string {
@@ -163,6 +170,58 @@ func reverse(s string) string {
 	}
 
 	return string(b)
+}
+
+func lcsLengthByte(xs, ys []byte) []int {
+	curr := make([]int, 1+len(ys))
+	prev := make([]int, 1+len(ys))
+	for _, x := range xs {
+		for j, y := range ys {
+			prev[j+1] = curr[j+1]
+			if x == y {
+				curr[j+1] = prev[j] + 1
+			} else {
+				a := curr[j]
+				if prev[j+1] > a {
+					a = prev[j+1]
+				}
+				curr[j+1] = a
+			}
+		}
+	}
+	return curr
+}
+
+func lcsByte(xs, ys []byte) []byte {
+	nx := len(xs)
+	ny := len(ys)
+
+	if nx == 0 {
+		return []byte(nil)
+	} else if nx == 1 {
+		if bytes.Contains(ys, xs) {
+			return xs
+		} else {
+			return []byte(nil)
+		}
+	}
+
+	i := nx / 2
+	xb := xs[:i]
+	xe := xs[i:]
+	ll_b := lcsLengthByte(xb, ys)
+	ll_e := lcsLengthByte(reverseByte(xe), reverseByte(ys))
+	val := -1
+	k := 0
+	for j := 0; j < ny+1; j++ {
+		if ll_b[j]+ll_e[ny-j] >= val {
+			val = ll_b[j] + ll_e[ny-j]
+			k = j
+		}
+	}
+	yb := ys[:k]
+	ye := ys[k:]
+	return append(lcsByte(xb, yb), lcsByte(xe, ye)...)
 }
 
 func reverseByte(s []byte) []byte {
