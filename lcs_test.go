@@ -2,6 +2,7 @@ package lcs
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -82,6 +83,9 @@ func findReplacements(a, b string) []Replacement {
 	return replacements
 }
 
+type Diffs struct {
+	Diffs []Diff
+}
 type Diff struct {
 	Left    string
 	Right   string
@@ -229,6 +233,10 @@ func TestPatch6(t *testing.T) {
 	a2, err := Patch(a, diffs)
 	assert.Nil(t, err)
 	assert.Equal(t, b, a2)
+
+	bJSON, _ := json.Marshal(diffs)
+	ioutil.WriteFile("diff12.json", bJSON, 0644)
+
 }
 
 func TestLcs(t *testing.T) {
