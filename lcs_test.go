@@ -191,6 +191,30 @@ func TestPatch3(t *testing.T) {
 	assert.Equal(t, "", a2)
 }
 
+func TestPatch4(t *testing.T) {
+	a := ""
+	b := "the blue cow leaped over the moon into space"
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(lcs(a, b))
+	diffs := getDiffs(a, b)
+	fmt.Println(diffs)
+	a2, err := Patch(a, diffs)
+	assert.Nil(t, err)
+	assert.Equal(t, b, a2)
+}
+func TestPatch5(t *testing.T) {
+	a := "the blue cow leaped over the moon into space"
+	b := ""
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(lcs(a, b))
+	diffs := getDiffs(a, b)
+	fmt.Println(diffs)
+	a2, err := Patch(a, diffs)
+	assert.Nil(t, err)
+	assert.Equal(t, b, a2)
+}
 func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
 	b := "the dog sat and flap"
