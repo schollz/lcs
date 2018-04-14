@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -54,7 +53,6 @@ func findReplacements(a, b string) []Replacement {
 		if startI == len(a)-1 && startJ == len(b)-1 {
 			break
 		}
-		// fmt.Printf("%d/%d %d/%d %d/%d\n", endI, len(a), endJ, len(b), curLcs, len(l))
 		if a[endI] == l[curLcs+1] && b[endJ] == l[curLcs+1] {
 			// fmt.Printf("[%d,%d] - [%d,%d]\n", startI, endI, startJ, endJ)
 			// fmt.Printf("'%s' - '%s'\n", string(a[startI:endI]), string(b[startJ:endJ]))
@@ -217,20 +215,6 @@ func TestPatch5(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, b, a2)
 }
-
-func TestPatch6(t *testing.T) {
-	aBytes, _ := ioutil.ReadFile("testing/1")
-	bBytes, _ := ioutil.ReadFile("testing/2")
-	a := string(aBytes)
-	b := string(bBytes)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-
 func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
 	b := "the dog sat and flap"

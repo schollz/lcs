@@ -2,9 +2,7 @@ package lcs
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -33,204 +31,53 @@ func TestLcs2(t *testing.T) {
 	assert.Equal(t, "the  sat n lap", lcs2(a, b))
 }
 
-type Replacement struct {
-	From [2]int
-	To   [2]int
-}
-
-func findReplacements(a, b string) []Replacement {
+func TestAlign(t *testing.T) {
+	a := "<the cat jumped>"
+	b := "<and the dog leaped>"
 	l := lcs(a, b)
-	a = "<" + a + ">"
-	b = "<" + b + ">"
-	l = "<" + l + ">"
-	startI := 0
-	endI := 1
-	startJ := 0
-	endJ := 1
-	curLcs := 0
-	replacements := []Replacement{}
-	for {
-		// end if they are both at the end
-		if startI == len(a)-1 && startJ == len(b)-1 {
-			break
-		}
-		// fmt.Printf("%d/%d %d/%d %d/%d\n", endI, len(a), endJ, len(b), curLcs, len(l))
-		if a[endI] == l[curLcs+1] && b[endJ] == l[curLcs+1] {
-			// fmt.Printf("[%d,%d] - [%d,%d]\n", startI, endI, startJ, endJ)
-			// fmt.Printf("'%s' - '%s'\n", string(a[startI:endI]), string(b[startJ:endJ]))
-			if a[startI:endI] == b[startJ:endJ] {
-				// no need to do anything
-			} else {
-				replacement := Replacement{
-					From: [2]int{startI, endI - 1},
-					To:   [2]int{startJ, endJ - 1},
-				}
-				replacements = append(replacements, replacement)
-			}
-			startI = endI
-			startJ = endJ
-			curLcs++
-			continue
-		}
-		if a[endI] != l[curLcs+1] {
-			endI++
-		}
-		if b[endJ] != l[curLcs+1] {
-			endJ++
+	fmt.Println(l)
+	aPos := make([]int, len(l))
+	bPos := make([]int, len(l))
+	j := 0
+	for i := range a {
+		if a[i] == l[j] {
+			aPos[j] = i
+			j++
 		}
 	}
-	return replacements
-}
-
-type Diff struct {
-	Left    string
-	Right   string
-	Between string
-}
-
-func (d Diff) String() string {
-	return fmt.Sprintf("'%s' '%s' '%s'", d.Left, d.Between, d.Right)
-}
-
-func getDiffs(a, b string) []Diff {
-	replacements := findReplacements(a, b)
-	diffs := make([]Diff, len(replacements))
-	for diffI, replacement := range replacements {
-		fmt.Println(replacement)
-		d := Diff{
-			Between: b[replacement.To[0]:replacement.To[1]],
+	j = 0
+	for i := range b {
+		if b[i] == l[j] {
+			bPos[j] = i
+			j++
 		}
-		if replacement.From[1] == 0 {
-			d.Left = "" // start
-		} else {
-			for i := replacement.To[0] - 1; i >= 0; i-- {
-				d.Left = b[i:replacement.To[0]]
-				if strings.Index(b, d.Left)+len(d.Left) == replacement.To[0] {
-					break
-				}
-			}
-		}
-		if replacement.To[0] == len(a) {
-			d.Right = "" // end
-		} else {
-			// only search on the right side of the original
-			for i := replacement.From[1] + 1; i < len(a); i++ {
-				d.Right = a[replacement.From[1]:i]
-				if strings.Index(a[replacement.From[0]:], d.Right)+len(a[:replacement.From[0]]) == replacement.From[1] {
-					break
-				}
-			}
-		}
-		fmt.Println(d)
-		diffs[diffI] = d
 	}
-	return diffs
-}
-
-func Patch(a string, diffs []Diff) (string, error) {
-	for _, d := range diffs {
-		fmt.Println(d)
-		start := 0
-		end := len(a)
-		if d.Left != "" {
-			start = strings.Index(a, d.Left) + len(d.Left)
-		}
-		if d.Right != "" {
-			end = strings.Index(a[start:], d.Right) + len(a[:start])
-		}
-		if start < 0 || end < 0 {
-			return "", errors.New("bad patch")
-		}
-		if end == 0 {
-			// prepend beginning
-			a = d.Between + a
-		} else if start == len(a) {
-			// append to end
-			a = a + d.Between
+	fmt.Println(aPos)
+	fmt.Println(bPos)
+	mergedPositions := make([]int, len(l))
+	for i := range aPos {
+		if aPos[i] > bPos[i] {
+			mergedPositions[i] = aPos[i]
 		} else {
-			a = a[:start] + d.Between + a[end:]
+			mergedPositions[i] = bPos[i]
 		}
-		fmt.Println(a)
 	}
-	return a, nil
+	fmt.Println(mergedPositions)
+	aAligned := ""
+	j = 0
+	for i := 0; i < len(a); i++ {
+		if string(a[i]) == string(l[j]) {
+			fmt.Println(i, j, mergedPositions[j], string(a[i]))
+			for k := i; k < mergedPositions[j]; k++ {
+				aAligned += "-"
+			}
+			i = mergedPositions[j]
+			j++
+		}
+		aAligned += string(a[i])
+	}
+	fmt.Println(aAligned)
 }
-
-func TestPatch1(t *testing.T) {
-	a := "1234557890550"
-	b := "a55b1255555cd89"
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-
-func TestPatch2(t *testing.T) {
-	a := "a the cat and the cow jumped over the moon"
-	b := "the blue cow leaped over the moon into space"
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-
-func TestPatch3(t *testing.T) {
-	a := "a the cat and the cow jumped over the moon"
-	b := "the blue cow leaped over the moon into space"
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch("aslkdfjalskdjf", diffs)
-	assert.NotNil(t, err)
-	assert.Equal(t, "", a2)
-}
-
-func TestPatch4(t *testing.T) {
-	a := ""
-	b := "the blue cow leaped over the moon into space"
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-func TestPatch5(t *testing.T) {
-	a := "the blue cow leaped over the moon into space"
-	b := ""
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-
-func TestPatch6(t *testing.T) {
-	aBytes, _ := ioutil.ReadFile("testing/1")
-	bBytes, _ := ioutil.ReadFile("testing/2")
-	a := string(aBytes)
-	b := string(bBytes)
-	fmt.Println(lcs(a, b))
-	diffs := getDiffs(a, b)
-	fmt.Println(diffs)
-	a2, err := Patch(a, diffs)
-	assert.Nil(t, err)
-	assert.Equal(t, b, a2)
-}
-
 func TestLcs(t *testing.T) {
 	a := "the cat sat on a lap"
 	b := "the dog sat and flap"
@@ -315,8 +162,9 @@ func lcs(xs, ys string) string {
 	} else if nx == 1 {
 		if strings.Contains(ys, xs) {
 			return xs
+		} else {
+			return ""
 		}
-		return ""
 	}
 
 	i := nx / 2
